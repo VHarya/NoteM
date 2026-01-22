@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  sessions   Session[] @relation("user_session")
+  categories Tag[]     @relation("user_categories")
+  notes      Note[]    @relation("user_notes")
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique @map("token")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation("user_session", fields: [userId], references: [id])
+
+  @@map("sessions")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation("user_categories", fields: [userId], references: [id])
+  notes Note[]
+
+  @@unique([name, userId])
+  @@map("tags")
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  categories Tag[]
+  user       User  @relation("user_notes", fields: [userId], references: [id])
+
+  @@map("notes")
+}
